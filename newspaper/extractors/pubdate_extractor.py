@@ -10,6 +10,19 @@ from newspaper.configuration import Configuration
 from newspaper.extractors.defines import PUBLISH_DATE_META_INFO, PUBLISH_DATE_TAGS
 
 
+def parse_strict_year_floored(date_string):
+    default_a = datetime(1000, 1, 1, 0, 0, 0)
+    default_b = datetime(2000, 1, 1, 0, 0, 0)
+    
+    parsed_a = date_parser(date_string, default=default_a)
+    parsed_b = date_parser(date_string, default=default_b)
+    
+    if parsed_a.year != parsed_b.year:
+        raise ValueError(f"Incomplete date: Proper year is strictly required. Found in '{date_string}'")
+    return parsed_a
+
+
+
 class PubdateExtractor:
     def __init__(self, config: Configuration) -> None:
         self.config = config
@@ -28,7 +41,7 @@ class PubdateExtractor:
         def parse_date_str(date_str):
             if date_str:
                 try:
-                    self.pubdate = date_parser(date_str)
+                    self.pubdate = parse_strict_year_floored(date_str)
                     return self.pubdate
                 except (ValueError, OverflowError, AttributeError, TypeError):
                     # near all parse failures are due to URL dates without a day
